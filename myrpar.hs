@@ -74,3 +74,48 @@ evalTraversable = traverse
 parTraversable :: Traversable t => (a -> Eval a) -> t a -> Eval (t a)
 -- parTraversable strat = evalTraversable (rparWith strat)
 parTraversable s = traverse (\a -> lazy $ let z = s a in case par# z of _ -> z)
+
+rparrpar :: (a -> b) -> (a, a) -> (b,b)
+-- rparrpar f (x,y) = runEval $ do
+--   a <- rpar (f x)
+--   b <- rpar (f y)
+--   pure (a,b)
+-- rparrpar f (x,y) = (\(Done r) -> r) $ lazy
+--   (let z = f x in case par# z of _ -> Done z) >>=
+--       (\a -> (let z2 = f y in case par# z2 of _ -> Done z2) >>= (\b -> Done (a,b)))
+-- rparrpar f (x,y) = (\(Done r) -> r) $ lazy
+--   ((let z2 = f y in case par# z2 of _ -> Done z2) >>=
+--       (\b -> Done (let z = f x in case par# z of _ -> z,b)))
+-- rparrpar f (x,y) = (\(Done r) -> r) $ lazy
+--   (lazy $
+--     (\b -> Done (let z = f x in case par# z of _ -> z,b))
+--       (let z2 = f y in case par# z2 of _ -> z2))
+-- rparrpar f (x,y) = (\(Done r) -> r) $ lazy
+--   (Done
+--     ( let z1 = f x in case par# z1 of _ -> z1
+--     , let z2 = f y in case par# z2 of _ -> z2
+--     )
+--   )
+rparrpar f (x,y) = lazy
+  ( let z1 = f x in case par# z1 of _ -> z1
+  , let z2 = f y in case par# z2 of _ -> z2
+  )
+
+rparrseq :: (a -> b) -> (a, a) -> (b,b)
+-- rparrseq f (x,y) = runEval $ do
+--   a <- rpar (f x)
+--   b <- rseq (f y)
+--   pure (a,b)
+-- We can't actually make the following transformation because (>>=) is
+-- strict in the first argument 'Done' when being called with 'rseq', which
+-- uses 'seq' internally.
+-- rparrseq f (x,y) = (\(Done r) -> r) $ lazy
+--   (lazy $
+--     (\b -> Done (let z1 = f x in case par# z1 of _ -> z1,b))
+--       (let z2 = f y in seq z2 z2))
+-- This is not a valid transformation because it requires that the seq returns
+-- before the entire result returns.
+rparrseq f (x,y) = lazy
+  ( let z1 = f x in case par# z1 of _ -> z1
+  , let z2 = f y in seq z2 z2
+  )
