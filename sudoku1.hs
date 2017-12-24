@@ -6,11 +6,9 @@ import Data.Maybe
 
 main :: IO ()
 main = do
-  [f] <- getArgs                           -- <1>
-  file <- readFile f                       -- <2>
-
-  let puzzles   = lines file               -- <3>
-      solutions = map solve puzzles        -- <4>
-
-  print (length (filter isJust solutions)) -- <5>
+  [f] <- getArgs
+  file <- readFile f
+  let puzzles   = lines file
+      solutions = map solve puzzles
+  print (length (filter isJust solutions))
 -- >>
