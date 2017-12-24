@@ -1,3 +1,4 @@
+import Control.DeepSeq
 import Control.Parallel
 import Control.Parallel.Strategies
 import Control.Exception
@@ -17,6 +18,12 @@ main = do
   [n] <- getArgs
   let test = [test1,test2,test3,test4] !! (read n - 1)
   t0 <- getCurrentTime
+  -- Replacing 'evaluate' with 'return' causes all of the tests to return immediately
+  -- (since nothing is being evaluated).
+  -- r <- return (runEval test)
+  -- Adding 'force' after 'evaluate' causes all of the tests to execute immediately,
+  -- and it takes the entire time for any results to be returned for ALL tests.
+  -- r <- evaluate $ force (runEval test)
   r <- evaluate (runEval test)
   printTimeSince t0
   print r
