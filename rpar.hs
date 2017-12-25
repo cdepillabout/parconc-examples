@@ -1,3 +1,6 @@
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE TupleSections #-}
+import Control.Monad
 import Control.DeepSeq
 import Control.Parallel
 import Control.Parallel.Strategies
@@ -64,3 +67,33 @@ test4 = do
 printTimeSince t0 = do
   t1 <- getCurrentTime
   printf "time: %.2fs\n" (realToFrac (diffUTCTime t1 t0) :: Double)
+
+-------------------------------------------------------------
+
+myMaybeUndefinedRpar :: Maybe Int
+myMaybeUndefinedRpar = runEval $ rparWith rdeepseq undefined >>= rpar . Just
+
+myMaybeUndefinedMyI :: Maybe Int
+myMaybeUndefinedMyI = runMyI $ MyI undefined >>= MyI . Just
+
+data MyI a = MyI a deriving (Functor, Show)
+
+runMyI :: MyI a -> a
+runMyI (MyI a) = a
+
+instance Applicative MyI where { pure = MyI ; (<*>) = ap }
+instance Monad MyI where { MyI a >>= f = f a }
+
+tryWithUndefined = case myMaybeUndefinedRpar of Just _ -> print "hello"
+-- tryWithUndefined = case myMaybeUndefinedMyI of Just _ -> print "hello"
+
+myUndefinedRpar' :: Int
+myUndefinedRpar' = runEval $ rparWith rdeepseq undefined
+
+myUndefinedParPair :: (Int, Int)
+myUndefinedParPair = runEval $ (,) <$> rseq undefined <*> rpar 3
+
+myUndefinedMyIPair :: (Int, Int)
+myUndefinedMyIPair = runMyI $ (,) <$> seq undefined (MyI undefined) <*> MyI undefined
+
+tryWithUndefinedPair = case myUndefinedParPair of (_, _) -> print "hello"

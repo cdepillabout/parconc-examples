@@ -10,3 +10,4 @@ extra-deps:
   - normaldistribution-1.1.0.3
   - accelerate-io-1.0.0.0
   - accelerate-1.0.0.0
+  - ghc-events-0.6.0
