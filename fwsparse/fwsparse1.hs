@@ -20,6 +20,7 @@ shortestPaths :: [Vertex] -> Graph -> Graph
 shortestPaths vs g = foldl' update g vs
  where
 -- <<update
+  update :: Graph -> Vertex -> Graph
   update g k = runPar $ do
     m <- Map.traverseWithKey (\i jmap -> spawn (return (shortmap i jmap))) g
     traverse get m
@@ -27,17 +28,13 @@ shortestPaths vs g = foldl' update g vs
    where
     shortmap :: Vertex -> IntMap Weight -> IntMap Weight
     shortmap i jmap = foldr shortest Map.empty vs
-        where shortest j m =
-                case (old,new) of
-                   (Nothing, Nothing) -> m
-                   (Nothing, Just w ) -> Map.insert j w m
-                   (Just w,  Nothing) -> Map.insert j w m
-                   (Just w1, Just w2) -> Map.insert j (min w1 w2) m
-                where
-                  old = Map.lookup j jmap
-                  new = do w1 <- weight g i k
-                           w2 <- weight g k j
-                           return (w1+w2)
+      where
+        shortest j m =
+          case (Map.lookup j jmap, (+) <$> weight g i k <*> weight g k j) of
+            (Nothing, Nothing) -> m
+            (Nothing, Just w ) -> Map.insert j w m
+            (Just w,  Nothing) -> Map.insert j w m
+            (Just w1, Just w2) -> Map.insert j (min w1 w2) m
 
 -- -----------------------------------------------------------------------------
 -- Testing

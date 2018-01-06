@@ -52,9 +52,6 @@ timetable people allTalks maxTrack maxSlot =
            -> [Talk]       -- talks that can be allocated in this slot
            -> [Talk]       -- all talks remaining to be allocated
            -> [TimeTable]  -- all possible solutions
--- >>
-
--- <<generate
   generate slotNo trackNo slots slot slotTalks talks
      | slotNo == maxSlot   = [slots]                                    -- <1>
      | trackNo == maxTrack =

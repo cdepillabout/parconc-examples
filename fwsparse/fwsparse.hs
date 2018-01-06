@@ -20,17 +20,21 @@ shortestPaths vs g = foldl' update g vs            -- <1>
    where
      shortmap :: Vertex -> IntMap Weight -> IntMap Weight
      shortmap i jmap = foldr shortest Map.empty vs -- <3>
-        where shortest j m =
-                case (old,new) of                  -- <6>
-                   (Nothing, Nothing) -> m
-                   (Nothing, Just w ) -> Map.insert j w m
-                   (Just w,  Nothing) -> Map.insert j w m
-                   (Just w1, Just w2) -> Map.insert j (min w1 w2) m
-                where
-                  old = Map.lookup j jmap          -- <4>
-                  new = do w1 <- weight g i k      -- <5>
-                           w2 <- weight g k j
-                           return (w1+w2)
+        where
+          shortest :: Vertex -> IntMap Weight -> IntMap Weight
+          shortest j m =
+            case (old,new) of                  -- <6>
+               (Nothing, Nothing) -> m
+               (Nothing, Just w ) -> Map.insert j w m
+               (Just w,  Nothing) -> Map.insert j w m
+               (Just w1, Just w2) -> Map.insert j (min w1 w2) m
+            where
+              old :: Maybe Weight
+              old = Map.lookup j jmap          -- <4>
+              new :: Maybe Weight
+              new = do w1 <- weight g i k      -- <5>
+                       w2 <- weight g k j
+                       return (w1+w2)
 -- >>
 
 -- -----------------------------------------------------------------------------

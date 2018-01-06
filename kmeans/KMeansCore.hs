@@ -4,6 +4,7 @@
 --
 
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module KMeansCore where
 
 import Data.List
@@ -39,9 +40,9 @@ instance Binary Point where
 readPoints :: FilePath -> IO [Point]
 readPoints f = do
   s <- B.readFile f
-  let ls = map B.words $ B.lines s
+  let ls = map B.words $ B.lines s :: [[B.ByteString]]
       points = [ Point (read (B.unpack sx)) (read (B.unpack sy))
-               | (sx:sy:_) <- ls ]
+               | ((sx :: B.ByteString):sy:_) <- ls ]
   --
   return points
 

@@ -50,6 +50,7 @@ import qualified Data.Vector.Mutable as MVector
 -- -----------------------------------------------------------------------------
 -- main: read input files, time calculation
 
+main :: IO ()
 main = runInUnboundThread $ do
   points <- decodeFile "points.bin"
   clusters <- read `fmap` readFile "clusters"
@@ -90,6 +91,7 @@ kmeans_seq nclusters points clusters =
   in
   loop 0 clusters
 
+tooMany :: Int
 tooMany = 80
 -- >>
 

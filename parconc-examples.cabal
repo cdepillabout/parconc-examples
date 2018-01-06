@@ -79,6 +79,33 @@ flag distributed
 flag network26
   default : True
 
+executable hanoi
+  main-is: hanoi.hs
+  build-depends:   base >= 4.5
+                 , time >= 1.4
+                 , parallel
+                 , deepseq
+  ghc-options: -O2 -threaded -eventlog
+  default-language: Haskell2010
+
+executable hanoi-strat
+  main-is: hanoi-strat.hs
+  build-depends:   base >= 4.5
+                 , time >= 1.4
+                 , parallel
+                 , deepseq
+  ghc-options: -O2 -threaded -eventlog
+  default-language: Haskell2010
+
+executable hanoi-strat2
+  main-is: hanoi-strat2.hs
+  build-depends:   base >= 4.5
+                 , time >= 1.4
+                 , parallel
+                 , deepseq
+  ghc-options: -O2 -threaded -eventlog
+  default-language: Haskell2010
+
 -- -----------------------------------------------------------------------------
 -- par-eval
 
@@ -203,7 +230,7 @@ executable kmeans
                  , array >= 0.4 && <0.6
                  , bytestring >= 0.9 && < 0.11
                  , vector >= 0.10 && < 0.13
-  ghc-options: -threaded
+  ghc-options: -threaded -eventlog
   default-language: Haskell2010
 
 executable GenSamples
@@ -233,6 +260,16 @@ executable parmonad
 executable rsa-pipeline
   main-is: rsa-pipeline.hs
   other-modules: ByteStringCompat Stream
+  build-depends:   base >= 4.5 && < 4.11
+                 , bytestring >= 0.9 && < 0.11
+                 , monad-par >= 0.3.4 && < 0.4
+                 , deepseq >= 1.3 && < 1.5
+  ghc-options: -threaded
+  default-language: Haskell2010
+
+executable rsa-pipeline2
+  main-is: rsa-pipeline2.hs
+  other-modules: ByteStringCompat Stream2
   build-depends:   base >= 4.5 && < 4.11
                  , bytestring >= 0.9 && < 0.11
                  , monad-par >= 0.3.4 && < 0.4
