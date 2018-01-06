@@ -1,9 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 import System.Random
 import System.Environment
 import Debug.Trace
 import Data.List
+import Control.Monad
 import Control.Monad.Par
 import Control.DeepSeq
 
@@ -53,13 +55,25 @@ search finished refine emptysoln = generate emptysoln
        | otherwise  = concat (map generate (refine partial))
 -- >>
 
--- <<parsearch
+search2
+  :: forall partial solution m.
+     Monad m
+  => (partial -> Maybe solution)
+  -> (partial -> m partial)
+  -> partial
+  -> m solution
+search2 finished refine emptysoln = generate emptysoln
+  where
+    generate :: partial -> m solution
+    generate partial
+       | Just soln <- finished partial = pure soln
+       | otherwise  = refine partial >>= generate
+
 parsearch :: NFData solution
       => ( partial -> Maybe solution )
       -> ( partial -> [ partial ] )
       -> partial
       -> [solution]
-
 parsearch finished refine emptysoln
   = runPar $ generate emptysoln
   where
@@ -68,7 +82,33 @@ parsearch finished refine emptysoln
        | otherwise  = do
            solnss <- parMapM generate (refine partial)
            return (concat solnss)
--- >>
+
+parsearch2
+  :: forall partial solution m.
+     (Monad m, NFData (m solution), Traversable m)
+  => (partial -> Maybe solution)
+  -> (partial -> m partial)
+  -> partial
+  -> m solution
+parsearch2 finished refine emptysoln =
+  runPar $ generate emptysoln
+  where
+    generate :: partial -> Par (m solution)
+    generate partial
+       | Just soln <- finished partial = return $ pure soln
+       | otherwise  = parMapM'' generate (refine partial)
+
+parMapM''
+  :: forall t a b.
+     (Monad t, Traversable t, NFData (t b))
+  => (a -> Par (t b))
+  -> t a
+  -> Par (t b)
+parMapM'' f xs = do
+  (res :: t (IVar (t b))) <- mapM (spawn . f) xs
+  (res2 :: t (t b)) <- mapM get res
+  pure $ join res2
+  undefined
 
 -- ----------------------------------------------------------------------------
 

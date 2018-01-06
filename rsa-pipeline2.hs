@@ -28,10 +28,10 @@ n, d, e :: Integer
 
 -- <<encrypt
 encrypt :: Integer -> Integer -> IVar (IList ByteString) -> Par (IVar (IList ByteString))
-encrypt n e s = streamMap (B.pack . show . power e n . code) s
+encrypt n e s = undefined -- streamMap (B.pack . show . power e n . code) s
 
 decrypt :: Integer -> Integer -> IVar (IList ByteString) -> Par (IVar (IList ByteString))
-decrypt n d s = streamMap (B.pack . decode . power d n . integer) s
+decrypt n d s = undefined -- streamMap (B.pack . decode . power d n . integer) s
 -- >>
 
 integer :: ByteString -> Integer

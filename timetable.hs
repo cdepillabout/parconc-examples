@@ -1,4 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 import System.Random
 import System.Environment
@@ -39,12 +41,8 @@ type TimeTable = [[Talk]]
 -- <<timetable
 timetable :: [Person] -> [Talk] -> Int -> Int -> [TimeTable]
 timetable people allTalks maxTrack maxSlot =
--- >>
--- <<generate_call
   generate 0 0 [] [] allTalks allTalks
--- >>
  where
--- <<generate_type
   generate :: Int          -- current slot number
            -> Int          -- current track number
            -> [[Talk]]     -- slots allocated so far
@@ -63,7 +61,6 @@ timetable people allTalks maxTrack maxSlot =
          , let slotTalks' = filter (`notElem` clashesWithT) ts          -- <6>
          , let talks' = filter (/= t) talks                             -- <7>
          ]
--- >>
 
 -- <<clashes
   clashes :: Map Talk [Talk]
@@ -77,11 +74,12 @@ timetable people allTalks maxTrack maxSlot =
 -- Utils
 
 -- <<selects
-selects :: [a] -> [(a,[a])]
+selects :: forall a. [a] -> [(a,[a])]
 selects xs0 = go [] xs0
   where
-   go xs [] = []
-   go xs (y:ys) = (y,xs++ys) : go (y:xs) ys
+    go :: [a] -> [a] -> [(a, [a])]
+    go xs [] = []
+    go xs (y:ys) = (y,xs++ys) : go (y:xs) ys
 -- >>
 
 -- ----------------------------------------------------------------------------
@@ -114,6 +112,7 @@ main = do
    print (length ts)
 --   [ a, b ] <- fmap (fmap read) getArgs
 --   print (head (test2 a b))
+
 
 test = timetable testPersons cs 2 2
  where

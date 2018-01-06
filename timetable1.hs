@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 import System.Random
 import System.Environment
@@ -37,20 +38,29 @@ type TimeTable = [[Talk]]
 -- ----------------------------------------------------------------------------
 -- The parallel skeleton
 
--- <<search_type
 search :: ( partial -> Maybe solution )   -- <1>
        -> ( partial -> [ partial ] )      -- <2>
        -> partial                         -- <3>
        -> [solution]                      -- <4>
--- >>
-
--- <<search
 search finished refine emptysoln = generate emptysoln
   where
     generate partial
        | Just soln <- finished partial = [soln]
        | otherwise  = concat (map generate (refine partial))
 -- >>
+search2
+  :: forall partial solution m.
+     Monad m
+  => (partial -> Maybe solution)
+  -> (partial -> m partial)
+  -> partial
+  -> m solution
+search2 finished refine emptysoln = generate emptysoln
+  where
+    generate :: partial -> m solution
+    generate partial
+       | Just soln <- finished partial = pure soln
+       | otherwise  = refine partial >>= generate
 
 -- ----------------------------------------------------------------------------
 
@@ -63,8 +73,10 @@ timetable :: [Person] -> [Talk] -> Int -> Int -> [TimeTable]
 timetable people allTalks maxTrack maxSlot =
   search finished refine emptysoln
  where
+  emptysoln :: Partial
   emptysoln = (0, 0, [], [], allTalks, allTalks)
 
+  finished :: Partial -> Maybe TimeTable
   finished (slotNo, trackNo, slots, slot, slotTalks, talks)
      | slotNo == maxSlot = Just slots
      | otherwise         = Nothing
@@ -75,6 +87,7 @@ timetable people allTalks maxTrack maxSlot =
      | s <- people
      , (t, ts) <- selects (talks s) ]
 
+  refine :: Partial -> [Partial]
   refine (slotNo, trackNo, slots, slot, slotTalks, talks)
      | trackNo == maxTrack = [(slotNo+1, 0, slot:slots, [], talks, talks)]
      | otherwise =

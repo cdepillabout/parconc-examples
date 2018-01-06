@@ -66,7 +66,8 @@ streamMap n fn instrm = do
     | i == n = do
         xxx <- new
         ilst <- get instrm
-        put outstrm $ Fork (loop 0 instrm xxx) ilst
+        undefined
+        -- put outstrm $ Fork (loop 0 instrm xxx) ilst
     | otherwise = do
         ilst <- get instrm
         f ilst
