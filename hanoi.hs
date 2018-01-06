@@ -1,4 +1,6 @@
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Main where
 
@@ -28,13 +30,22 @@ newtype Moves = Moves { unMoves :: Integer } deriving (Enum, Eq, Ord, Num)
 instance Show Moves where
   show (Moves m) = show m
 
-hanoi :: Disks -> Moves
-hanoi disks
+-- hanoi :: Disks -> Moves
+-- hanoi disks
+--   | disks <= 0 = 0
+--   | otherwise = 1 + hanoi (disks - 1) + hanoi (disks - 1)
+
+hanoi :: Disks -> () -> Moves
+hanoi disks ()
   | disks <= 0 = 0
-  | otherwise = 1 + hanoi (disks - 1) + hanoi (disks - 1)
+  | otherwise =
+    let !x = hanoi (disks - 1) ()
+        !y = hanoi (disks - 1) ()
+        !res = 1 + x + y
+    in res
 
 allDisks :: Disks -> [Disks]
 allDisks n = [1..n]
 
 allHanoi :: Disks -> [Moves]
-allHanoi n = fmap hanoi $ allDisks n
+allHanoi n = fmap (\d -> hanoi d ()) $ allDisks n

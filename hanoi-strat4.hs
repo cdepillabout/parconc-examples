@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
@@ -40,7 +41,11 @@ instance Show Moves where
 hanoi :: Disks -> () -> Moves
 hanoi disks ()
   | disks <= 0 = 0
-  | otherwise = 1 + hanoi (disks - 1) () + hanoi (disks - 1) ()
+  | otherwise =
+    let !x = hanoi (disks - 1) ()
+        !y = hanoi (disks - 1) ()
+        !res = 1 + x + y
+    in res
 
 type Depth = Int
 
@@ -51,14 +56,14 @@ hanoiPar depth' disks' = do
   where
     go :: Depth -> Disks -> ParIO Moves
     go depth disks
-      | depth <= 0 = pure $ hanoi disks ()
+      | depth <= 0 = pure $! hanoi disks ()
       | disks <= 0 = pure 0
       | otherwise = do
           moveFirstIVar <- spawn (go (depth - 1) (disks - 1))
           moveLastIVar <- spawn (go (depth - 1) (disks - 1))
           moveFirst <- get moveFirstIVar
           moveLast <- get moveLastIVar
-          pure $ 1 + moveFirst + moveLast
+          pure $! 1 + moveFirst + moveLast
 
 allDisks :: Disks -> [Disks]
 allDisks n = [1..n]
