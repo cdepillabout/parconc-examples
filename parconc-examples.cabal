@@ -401,6 +401,17 @@ executable  fwdense1
      ghc-options: -fllvm
   default-language: Haskell2010
 
+executable  repa-test
+  main-is: repa-test.hs
+  build-depends:   base >= 4.5 && < 4.11
+                 , repa >= 3.2 && < 3.5
+                 , random
+                 , time
+  ghc-options: -O2 -threaded
+  if flag(llvm)
+     ghc-options: -fllvm
+  default-language: Haskell2010
+
 executable rotateimage
   main-is: rotateimage.hs
   build-depends:   base >= 4.5 && < 4.11
