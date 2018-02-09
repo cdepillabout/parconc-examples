@@ -1,14 +1,21 @@
 {-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE NoImplicitPrelude #-}
+
+-- This is similar to https://gist.github.com/cblp/b427ffcce536d1a6b7e03598ec21e2ee
 
 module Main where
 
-import ClassyPrelude
-
+import Control.Concurrent.MVar
+import Control.Monad
 import Data.List.NonEmpty
 
 main :: IO ()
-main = undefined
+main = do
+  dl <- listToDoubleList [1 :: Int, 2, 3, 4]
+  newDl <- fmapDoubleList show dl
+  appendVal "hello" newDl
+  reverseDoubleList newDl
+  list <- doubleListToList newDl
+  print list
 
 newtype DoubleList a = DoubleList (MVar (Maybe (Node a, Node a)))
 
@@ -41,14 +48,14 @@ singletonDoubleList a = do
   return doubleList
 
 nodesToDoubleList :: (Node a, Node a) -> IO (DoubleList a)
-nodesToDoubleList nodes = fmap DoubleList $ newMVar (Just nodes)
+nodesToDoubleList nodes = DoubleList <$> newMVar (Just nodes)
 
 linkNodes :: Node a -> Node a -> IO ()
 linkNodes
     nodeA@Node{nextNodeMVar=nodeANextNodeMVar}
     nodeB@Node{prevNodeMVar=nodeBPrevNodeMVar} = do
-  swapMVar nodeANextNodeMVar (Just nodeB)
-  swapMVar nodeBPrevNodeMVar (Just nodeA)
+  void $ swapMVar nodeANextNodeMVar (Just nodeB)
+  void $ swapMVar nodeBPrevNodeMVar (Just nodeA)
   pure ()
 
 appendVal :: a -> DoubleList a -> IO ()
@@ -58,7 +65,7 @@ appendVal a (DoubleList mvar) = do
     Nothing -> do
       nodes <- singletonNodes a
       putMVar mvar (Just nodes)
-    Just (startingNode, endingNode@Node{nextNodeMVar=endingNodeNextNodeMVar}) -> do
+    Just (startingNode, endingNode) -> do
       newEndingNode <- singletonNode a
       linkNodes endingNode newEndingNode
       putMVar mvar $ Just (startingNode, newEndingNode)
@@ -83,7 +90,7 @@ reverseDoubleList (DoubleList mvar) = do
       putMVar mvar $ Just (endNode, startNode)
 
 fmapNode :: (a -> b) -> Node a -> IO (Node b, Node b)
-fmapNode f Node{val=a, prevNodeMVar, nextNodeMVar} = do
+fmapNode f Node{val=a, nextNodeMVar} = do
   let b = f a
   maybeNextNode <- readMVar nextNodeMVar
   case maybeNextNode of
@@ -93,7 +100,7 @@ fmapNode f Node{val=a, prevNodeMVar, nextNodeMVar} = do
       startingEmptyNode <- newMVar Nothing
       newNextNodeMVar <- newMVar (Just newNextNode)
       let newNode = Node b startingEmptyNode newNextNodeMVar
-      swapMVar prevNodeMVar (Just newNode)
+      void $ swapMVar prevNodeMVar (Just newNode)
       pure (newNode, lastNode)
 
 fmapDoubleList :: (a -> b) -> DoubleList a -> IO (DoubleList b)
