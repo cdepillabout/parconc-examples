@@ -8,6 +8,7 @@ import qualified Data.ByteString as B
 import Data.Either
 import Data.Foldable
 import Data.Maybe
+import Data.Monoid
 import System.IO
 import Text.Printf
 
@@ -80,6 +81,8 @@ main2 = do
   printf "%s was first (%d bytes)\n" url (B.length r)
   mapM_ wait as
 
+
+
 main3 :: IO ()
 main3 = do
   hSetBuffering stdin NoBuffering
@@ -94,5 +97,26 @@ main3 = do
   let successes = length $ filter isRight res
   printf "%d succeeded out of %d\n" successes (length res)
 
+main4 :: IO ()
+main4 = mask $ \restore -> do
+  maskingState <- getMaskingState
+  putStrLn $ "masking state: " <> show maskingState
+  int <- restore (pure 1) :: IO Int
+  char <- restore (pure 'c') :: IO Char
+  putStrLn $ "int: " <> show int
+  putStrLn $ "char: " <> show char
+
+myMask :: ((IO a -> IO a) -> IO b) -> IO b
+myMask = mask
+
+main5 :: IO ()
+main5 = myMask $ \restore -> do
+  int <- restore (pure 1) :: IO Int
+  -- Can't do the following because the type of myMask is not general enough.
+  -- mask is sufficiently general.
+  -- char <- restore (pure 'c') :: IO Char
+  putStrLn $ "int: " <> show int
+  -- putStrLn $ "char: " <> show char
+
 main :: IO ()
-main = main3
+main = main4
