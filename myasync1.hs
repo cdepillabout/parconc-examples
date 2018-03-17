@@ -1,5 +1,5 @@
 
-import Control.Concurrent
+import Control.Concurrent hiding (forkFinally)
 import Control.Concurrent.MVar
 import Control.Exception
 import Control.Monad
@@ -18,12 +18,17 @@ import TimeIt
 
 data Async a = Async ThreadId (MVar (Either SomeException a))
 
+forkFinally :: IO a -> (Either SomeException a -> IO ()) -> IO ThreadId
+forkFinally action f =
+  mask $ \restore ->
+    forkIO $ do
+      res <- try (restore action)
+      f res
+
 async :: IO a -> IO (Async a)
 async action = do
   var <- newEmptyMVar
-  threadId <- forkIO $ do
-    r <- try action
-    putMVar var r
+  threadId <- forkFinally action (putMVar var)
   pure $ Async threadId var
 
 cancel :: Async a -> IO ()
