@@ -5,7 +5,7 @@ module Main where
 
 import ClassyPrelude
 
-import Control.Concurrent
+import Control.Concurrent (forkIO)
 import Control.Concurrent.STM (retry)
 import Control.Exception
 import Data.Functor
@@ -37,13 +37,17 @@ putMyTMVar a (MyTMVar tvar) = do
     Just _ -> retry
 
 globalMyTMVar :: MyTMVar Int
-globalMyTMVar = unsafePerformIO $ atomically newEmptyMyTMVar
+globalMyTMVar = unsafePerformIO $ MyTMVar <$> newTVarIO Nothing
 
 test :: IO Int
 test = do
-  _ <- evaluate globalMyTMVar
   forkIO $ do
+    say "from thread 1, sleeping 5 seconds..."
+    threadDelay $ 1000 * 1000 * 5
     atomically $ putMyTMVar 3 globalMyTMVar
+    say "from thread 1, put 3 in globalMyTMVar"
+    say "from thread 1, sleeping 5 seconds..."
+    threadDelay $ 1000 * 1000 * 5
     res <- atomically $ do
       putMyTMVar 4 globalMyTMVar
       takeMyTMVar globalMyTMVar
@@ -51,4 +55,3 @@ test = do
   res <- atomically $ takeMyTMVar globalMyTMVar
   say $ "from thread 2, res = " <> tshow res
   pure res
-
