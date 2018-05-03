@@ -52,7 +52,8 @@ waitEitherSTM async1 async2 =
   fmap Left (waitSTM async1) `orElse` fmap Right (waitSTM async2)
 
 waitAnySTM :: [Async a] -> STM a
-waitAnySTM = foldr (orElse . waitSTM) retry
+-- waitAnySTM = foldr (orElse . waitSTM) retry
+waitAnySTM = asum . fmap waitSTM
 
 waitAny :: [Async a] -> IO a
 waitAny = atomically . waitAnySTM
