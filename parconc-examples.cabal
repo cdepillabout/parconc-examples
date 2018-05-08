@@ -80,6 +80,14 @@ flag distributed
 flag network26
   default : True
 
+executable mytchan
+  main-is: mytchan.hs
+  build-depends:   base >= 4.5 && < 4.11
+                 , classy-prelude
+                 , stm
+  ghc-options: -O2 -threaded -rtsopts
+  default-language: Haskell2010
+
 executable mystm1
   main-is: mystm1.hs
   build-depends:   base >= 4.5 && < 4.11
