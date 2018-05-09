@@ -7,6 +7,7 @@ import Control.Concurrent.STM
   , TVar
   , atomically
   , newTVar
+  , orElse
   , readTVar
   , retry
   , writeTVar
@@ -46,6 +47,10 @@ unGetTChan (TChan readside _) a = do
   tailTVar <- readTVar readside
   startTVar <- newTVar (TCons a tailTVar)
   writeTVar readside startTVar
+
+readEitherTChan :: TChan a -> TChan b -> STM (Either a b)
+readEitherTChan tchanA tchanB =
+  fmap Left (readTChan tchanA) `orElse` fmap Right (readTChan tchanB)
 
 test :: STM [Int]
 test = do
