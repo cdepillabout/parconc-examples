@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 import Network
 import Control.Monad
 import Control.Concurrent
@@ -16,7 +17,7 @@ main = withSocketsDo $ do
   forever $ do
     (handle, host, port) <- accept sock
     printf "Accepted connection from %s: %s\n" host (show port)
-    forkFinally (talk handle factor) (\_ -> hClose handle)       -- <2>
+    forkFinally (talk handle factor) (\e -> printf "in forkFinally, e = %s\n" (show e) >> hClose handle)       -- <2>
 
 port :: Int
 port = 44444
@@ -27,7 +28,8 @@ talk :: Handle -> TVar Integer -> IO ()
 talk h factor = do
   hSetBuffering h LineBuffering
   c <- atomically newTChan              -- <1>
-  race (server h factor c) (receive h c)  -- <2>
+  (race (server h factor c) (receive h c) >> pure ()) `catch` \(e :: SomeException) -> printf "in catch for race, e = %s\n" (show e) -- <2>
+  printf "In talk, after race\n"
   return ()
 -- >>
 

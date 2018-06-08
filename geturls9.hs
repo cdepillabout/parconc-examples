@@ -17,6 +17,7 @@ main = do
   xs <- foldr conc (return []) (map getURL sites)
   print (map B.length xs)
  where
+  conc :: IO a -> IO [a] -> IO [a]
   conc ioa ioas = do
     (a,as) <- concurrently ioa ioas
     return (a:as)

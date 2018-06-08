@@ -1,23 +1,26 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 import ConcurrentUtils
 import Network
 import Control.Monad
-import Control.Concurrent (forkIO)
+import Control.Concurrent (forkIO, threadDelay)
 import System.IO
 import Text.Printf
 import Control.Exception
 
 -- <<main
-main = withSocketsDo $ do
-  sock <- listenOn (PortNumber (fromIntegral port))              -- <1>
-  printf "Listening on port %d\n" port
-  forever $ do                                                   -- <2>
-     (handle, host, port) <- accept sock                         -- <3>
-     printf "Accepted connection from %s: %s\n" host (show port)
-     forkFinally (talk handle) (\_ -> hClose handle)             -- <4>
-
-port :: Int
-port = 44444
--- >>
+main = do
+  tid <- forkIO $ do
+    printf "inside forkIO\n"
+    withSocketsDo $ do
+      printf "inside withSocketsDo\n"
+      sock <- listenOn (PortNumber 44444)              -- <1>
+      printf "Listening on port %d\n" (44444 :: Int)
+      forever $ do                                                   -- <2>
+        printf "inside forever\n"
+        (handle, host, port) <- accept sock                         -- <3>
+        printf "Accepted connection from %s: %s\n" host (show port)
+        forkFinally (talk handle) (\res -> printf "in finally, res: %s\n" (show res) >> hClose handle)             -- <4>
+  threadDelay 10000000000 `catch` (\(e :: SomeException) -> printf "got exception in main thread: %s\n" (show e) >> throwTo tid e)
 
 -- <<talk
 talk :: Handle -> IO ()
